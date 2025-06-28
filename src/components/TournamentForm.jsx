@@ -118,54 +118,6 @@ export default function FormulaireTournoi({ open, onClose, onSubmit }) {
                 />
               )
             ))}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="h6">Champs personnalisés</Typography>
-            
-            {champsPersonnalises.map((champ) => (
-              <TextField
-                key={champ.name}
-                label={champ.name}
-                type={champ.type}
-                value={donneesFormulaire[champ.name] || ''}
-                onChange={(e) => setDonneesFormulaire({
-                  ...donneesFormulaire, 
-                  [champ.name]: champ.type === 'number' ? Number(e.target.value) : e.target.value
-                })}
-                fullWidth
-                margin="normal"
-              />
-            ))}
-
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                label="Nom du champ"
-                value={nouveauChamp.name}
-                onChange={(e) => setNouveauChamp({...nouveauChamp, name: e.target.value})}
-                size="small"
-                fullWidth
-              />
-              <TextField
-                select
-                label="Type"
-                value={nouveauChamp.type}
-                onChange={(e) => setNouveauChamp({...nouveauChamp, type: e.target.value})}
-                size="small"
-                sx={{ minWidth: 120 }}
-              >
-                <MenuItem value="text">Texte</MenuItem>
-                <MenuItem value="number">Nombre</MenuItem>
-                <MenuItem value="boolean">Oui/Non</MenuItem>
-              </TextField>
-              <Button 
-                onClick={ajouterChamp} 
-                variant="outlined"
-                disabled={!nouveauChamp.name}
-              >
-                Ajouter
-              </Button>
-            </Stack>
           </Stack>
         </form>
       </DialogContent>
