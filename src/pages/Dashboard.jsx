@@ -1,73 +1,84 @@
-import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box , Paper, TextField, Checkbox, IconButton } from "@mui/material";
-import LogoutButton from '../components/LogoutButton';
-import { Edit, Delete } from "@mui/icons-material";
-import AppBarWithLogout from '../components/AppBarWithLogout';
+import { useState, useEffect } from 'react';
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import TournamentForm from '../components/TournamentForm';
+import TournamentsTable from '../components/TournamentsTable';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 
-export default function Dashboard() {
-  const [dates, setDates] = useState([]);
-  const [newDate, setNewDate] = useState({
-    concertDate: "",
-    city: "",
-    country: "",
-    venue: "",
-    isSoldOut: false,
-  });
+export default function TournamentsDashboard() {
+  const [tournaments, setTournaments] = useState([]);
+  const [openForm, setOpenForm] = useState(false);
+  const [currentTournament, setCurrentTournament] = useState(null);
 
-  // Fetch tour dates from Firestore
+  // Fetch tournaments
   useEffect(() => {
-    const fetchDates = async () => {
-      const querySnapshot = await getDocs(collection(db, "tourDates"));
-      setDates(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const fetchTournaments = async () => {
+      const querySnapshot = await getDocs(collection(db, 'tournaments'));
+      setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
-    fetchDates();
+    fetchTournaments();
   }, []);
 
-  // Add a new date
-  const handleAddDate = async () => {
-    await addDoc(collection(db, "tourDates"), newDate);
-    setNewDate({ ...newDate, concertDate: "", city: "", country: "", venue: "" });
+  // CRUD Operations
+  const handleCreate = async (data) => {
+    await addDoc(collection(db, 'tournaments'), data);
+    setOpenForm(false);
+    // Refresh list
+    const querySnapshot = await getDocs(collection(db, 'tournaments'));
+    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  };
+
+  const handleUpdate = async (data) => {
+    await updateDoc(doc(db, 'tournaments', currentTournament.id), data);
+    setOpenForm(false);
+    // Refresh list
+    const querySnapshot = await getDocs(collection(db, 'tournaments'));
+    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  };
+
+  const handleDelete = async (id) => {
+    await deleteDoc(doc(db, 'tournaments', id));
+    // Refresh list
+    const querySnapshot = await getDocs(collection(db, 'tournaments'));
+    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
   return (
-        <>
-      <AppBarWithLogout />
-    <div>
-      <h1>Tour Dates Management</h1>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>City</TableCell>
-              <TableCell>Country</TableCell>
-              <TableCell>Venue</TableCell>
-              <TableCell>Sold Out?</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {dates.map((date) => (
-              <TableRow key={date.id}>
-                <TableCell>{date.concertDate}</TableCell>
-                <TableCell>{date.city}</TableCell>
-                <TableCell>{date.country}</TableCell>
-                <TableCell>{date.venue}</TableCell>
-                <TableCell>
-                  <Checkbox checked={date.isSoldOut} />
-                </TableCell>
-                <TableCell>
-                  <IconButton><Edit /></IconButton>
-                  <IconButton><Delete /></IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </div>
-    </>
+    <Box sx={{ p: 3 }}>
+      <Button 
+        variant="contained" 
+        onClick={() => {
+          setCurrentTournament(null);
+          setOpenForm(true);
+        }}
+        sx={{ mb: 3 }}
+      >
+        Add New Tournament
+      </Button>
+
+      <TournamentsTable
+        tournaments={tournaments}
+        onEdit={(tournament) => {
+          setCurrentTournament(tournament);
+          setOpenForm(true);
+        }}
+        onDelete={handleDelete}
+      />
+
+      <TournamentForm
+        open={openForm}
+        onClose={() => setOpenForm(false)}
+        onSubmit={currentTournament ? handleUpdate : handleCreate}
+        initialData={currentTournament}
+      />
+    </Box>
   );
 }
