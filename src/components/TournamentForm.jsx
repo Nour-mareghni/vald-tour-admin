@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -25,12 +25,12 @@ const CHAMPS_STANDARDS = [
     name: 'status', 
     label: 'Statut', 
     type: 'select',
-    options: ['à venir', 'en cours', 'terminé'],
+    options: ['upcoming', 'ongoing', 'completed'],
     required: true 
   }
 ];
 
-export default function FormulaireTournoi({ open, onClose, onSubmit }) {
+export default function FormulaireTournoi({ open, onClose, onSubmit, initialData }) {
   const [donneesFormulaire, setDonneesFormulaire] = useState(
     CHAMPS_STANDARDS.reduce((acc, champ) => ({
       ...acc,
@@ -38,33 +38,28 @@ export default function FormulaireTournoi({ open, onClose, onSubmit }) {
     }), {})
   );
 
-  const [champsPersonnalises, setChampsPersonnalises] = useState([]);
-  const [nouveauChamp, setNouveauChamp] = useState({ 
-    name: '', 
-    type: 'text' 
-  });
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setDonneesFormulaire(initialData);
+    } else {
+      setDonneesFormulaire(
+        CHAMPS_STANDARDS.reduce((acc, champ) => ({
+          ...acc,
+          [champ.name]: champ.type === 'number' ? 0 : ''
+        }), {})
+      );
+    }
+  }, [initialData, open]);
 
   const handleSoumettre = (e) => {
     e.preventDefault();
     onSubmit(donneesFormulaire);
-    onClose();
-  };
-
-  const ajouterChamp = () => {
-    if (!nouveauChamp.name) return;
-    
-    setChampsPersonnalises([...champsPersonnalises, nouveauChamp]);
-    setDonneesFormulaire({
-      ...donneesFormulaire,
-      [nouveauChamp.name]: nouveauChamp.type === 'number' ? 0 : ''
-    });
-    setNouveauChamp({ name: '', type: 'text' });
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        Créer un nouveau tournoi
+        {initialData?.id ? 'Modifier le tournoi' : 'Créer un nouveau tournoi'}
         <IconButton
           onClick={onClose}
           sx={{
@@ -107,7 +102,9 @@ export default function FormulaireTournoi({ open, onClose, onSubmit }) {
                   label={champ.label}
                   type={champ.type}
                   InputLabelProps={champ.type === 'date' ? { shrink: true } : {}}
-                  value={donneesFormulaire[champ.name] || ''}
+                  value={champ.type === 'date' && donneesFormulaire[champ.name] 
+                    ? donneesFormulaire[champ.name].split('T')[0] 
+                    : donneesFormulaire[champ.name] || ''}
                   onChange={(e) => setDonneesFormulaire({
                     ...donneesFormulaire, 
                     [champ.name]: champ.type === 'number' ? Number(e.target.value) : e.target.value
@@ -129,7 +126,7 @@ export default function FormulaireTournoi({ open, onClose, onSubmit }) {
           variant="contained"
           type="submit"
         >
-          Créer
+          {initialData?.id ? 'Mettre à jour' : 'Créer'}
         </Button>
       </DialogActions>
     </Dialog>
