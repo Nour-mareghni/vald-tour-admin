@@ -10,7 +10,12 @@ import {
   IconButton,
   Chip,
   Button,
-  Box
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import TournamentForm from './TournamentForm';
@@ -27,6 +32,8 @@ export default function TableauTournois() {
   const [tournois, setTournois] = useState([]);
   const [formOuvert, setFormOuvert] = useState(false);
   const [tournoiActuel, setTournoiActuel] = useState(null);
+  const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [tournoiASupprimer, setTournoiASupprimer] = useState(null);
 
   // Charger les tournois depuis Firestore
   useEffect(() => {
@@ -54,14 +61,26 @@ export default function TableauTournois() {
     return () => unsubscribe(); // Nettoyage
   }, []);
 
-  const handleSupprimer = async (id) => {
+   const confirmerSuppression = (tournoi) => {
+    setTournoiASupprimer(tournoi);
+    setSuppressionOuverte(true);
+  };
+
+  const handleSupprimer = async () => {
+    if (!tournoiASupprimer?.id) {
+      console.error("Aucun ID de tournoi à supprimer");
+      return;
+    }
+
     try {
-      await deleteDoc(doc(db, 'tournaments', id));
-      setTournois(tournois.filter(t => t.id !== id));
+      await deleteDoc(doc(db, 'tournaments', tournoiASupprimer.id));
+      setSuppressionOuverte(false);
+      setTournoiASupprimer(null);
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
   };
+
 
   const handleSoumettre = async (donneesTournoi) => {
     try {
@@ -107,9 +126,9 @@ export default function TableauTournois() {
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
-            {tournois.map((tournoi) => (
-              <TableRow key={tournoi.id}>
+      <TableBody>
+        {tournois.map((tournoi) => (
+          <TableRow key={tournoi.id}>
                 <TableCell>{tournoi.name}</TableCell>
                 <TableCell>{new Date(tournoi.date).toLocaleDateString()}</TableCell>
                 <TableCell>{tournoi.city}, {tournoi.country}</TableCell>
@@ -121,23 +140,45 @@ export default function TableauTournois() {
                     color={statusColors[tournoi.status]} 
                   />
                 </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => {
-                    setTournoiActuel(tournoi);
-                    setFormOuvert(true);
-                  }}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton onClick={() => handleSupprimer(tournoi.id)}>
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+            <TableCell>
+              <IconButton onClick={() => {
+                setTournoiActuel(tournoi);
+                setFormOuvert(true);
+              }}>
+                <Edit />
+              </IconButton>
+              <IconButton onClick={() => confirmerSuppression(tournoi)}>
+                <Delete />
+              </IconButton>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+      
         </Table>
       </TableContainer>
-
+              {/* Dialogue de confirmation de suppression */}
+      <Dialog
+        open={suppressionOuverte}
+        onClose={() => setSuppressionOuverte(false)}
+      >
+        <DialogTitle>Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Êtes-vous sûr de vouloir supprimer le tournoi "{tournoiASupprimer?.name}" ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSuppressionOuverte(false)}>Annuler</Button>
+          <Button 
+            onClick={handleSupprimer} 
+            color="error"
+            variant="contained"
+          >
+            Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
       <TournamentForm 
         open={formOuvert}
         onClose={() => {
