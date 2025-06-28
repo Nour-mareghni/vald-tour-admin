@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -7,57 +8,90 @@ import {
   TableRow, 
   Paper,
   IconButton,
-  Chip
+  Chip,
+  Button,
+  Box
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
+import TournamentForm from './TournamentForm';
 
 const statusColors = {
-  upcoming: 'primary',
-  ongoing: 'warning',
-  completed: 'success'
+  upcoming: 'primary',    // À venir
+  ongoing: 'warning',     // En cours
+  completed: 'success'    // Terminé
 };
 
-export default function TournamentsTable({ tournaments, onEdit, onDelete }) {
+export default function TableauTournois() {
+  const [tournois, setTournois] = useState([]);
+  const [formOuvert, setFormOuvert] = useState(false);
+
+  const handleCreerTournoi = (nouveauTournoi) => {
+    setTournois([...tournois, { 
+      id: Date.now().toString(),
+      ...nouveauTournoi 
+    }]);
+  };
+
+  const handleSupprimer = (id) => {
+    setTournois(tournois.filter(t => t.id !== id));
+  };
+
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Date</TableCell>
-            <TableCell>Location</TableCell>
-            <TableCell>Venue</TableCell>
-            <TableCell>Entry Fee</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tournaments.map((tournament) => (
-            <TableRow key={tournament.id}>
-              <TableCell>{tournament.name}</TableCell>
-              <TableCell>{new Date(tournament.date).toLocaleDateString()}</TableCell>
-              <TableCell>{tournament.city}, {tournament.country}</TableCell>
-              <TableCell>{tournament.venue}</TableCell>
-              <TableCell>${tournament.entryFee}</TableCell>
-              <TableCell>
-                <Chip 
-                  label={tournament.status} 
-                  color={statusColors[tournament.status]} 
-                />
-              </TableCell>
-              <TableCell>
-                <IconButton onClick={() => onEdit(tournament)}>
-                  <Edit />
-                </IconButton>
-                <IconButton onClick={() => onDelete(tournament.id)}>
-                  <Delete />
-                </IconButton>
-              </TableCell>
+    <Box>
+      <Button 
+        variant="contained" 
+        onClick={() => setFormOuvert(true)}
+        sx={{ mb: 3 }}
+      >
+        Ajouter un nouveau tournoi
+      </Button>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Nom</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Localisation</TableCell>
+              <TableCell>Lieu</TableCell>
+              <TableCell>Prix d'entrée</TableCell>
+              <TableCell>Statut</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {tournois.map((tournoi) => (
+              <TableRow key={tournoi.id}>
+                <TableCell>{tournoi.name}</TableCell>
+                <TableCell>{new Date(tournoi.date).toLocaleDateString()}</TableCell>
+                <TableCell>{tournoi.city}, {tournoi.country}</TableCell>
+                <TableCell>{tournoi.venue}</TableCell>
+                <TableCell>${tournoi.entryFee}</TableCell>
+                <TableCell>
+                  <Chip 
+                    label={tournoi.status} 
+                    color={statusColors[tournoi.status]} 
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton>
+                    <Edit />
+                  </IconButton>
+                  <IconButton onClick={() => handleSupprimer(tournoi.id)}>
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TournamentForm 
+        open={formOuvert}
+        onClose={() => setFormOuvert(false)}
+        onSubmit={handleCreerTournoi}
+      />
+    </Box>
   );
 }

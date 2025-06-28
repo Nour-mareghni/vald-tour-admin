@@ -1,155 +1,185 @@
 import { useState } from 'react';
-import { 
-  TextField, 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
   Button,
   MenuItem,
   Stack,
   Divider,
-  Typography
+  Typography,
+  IconButton
 } from '@mui/material';
+import { Close } from '@mui/icons-material';
 
-// Pre-defined standard fields
-const STANDARD_FIELDS = [
-  { name: 'name', label: 'Tournament Name', type: 'text', required: true },
+const CHAMPS_STANDARDS = [
+  { name: 'name', label: 'Nom du tournoi', type: 'text', required: true },
   { name: 'date', label: 'Date', type: 'date', required: true },
-  { name: 'city', label: 'City', type: 'text', required: true },
-  { name: 'country', label: 'Country', type: 'text', required: true },
-  { name: 'venue', label: 'Venue', type: 'text', required: true },
-  { name: 'entryFee', label: 'Entry Fee', type: 'number', required: false },
+  { name: 'city', label: 'Ville', type: 'text', required: true },
+  { name: 'country', label: 'Pays', type: 'text', required: true },
+  { name: 'venue', label: 'Lieu', type: 'text', required: true },
+  { name: 'entryFee', label: 'Prix d\'entrée', type: 'number', required: false },
   { 
     name: 'status', 
-    label: 'Status', 
+    label: 'Statut', 
     type: 'select',
-    options: ['upcoming', 'ongoing', 'completed'],
+    options: ['à venir', 'en cours', 'terminé'],
     required: true 
   }
 ];
 
-export default function TournamentForm({ onSubmit }) {
-  // Initialize form with standard fields
-  const [formData, setFormData] = useState(
-    STANDARD_FIELDS.reduce((acc, field) => {
-      acc[field.name] = field.type === 'number' ? 0 : '';
-      return acc;
-    }, {})
+export default function FormulaireTournoi({ open, onClose, onSubmit }) {
+  const [donneesFormulaire, setDonneesFormulaire] = useState(
+    CHAMPS_STANDARDS.reduce((acc, champ) => ({
+      ...acc,
+      [champ.name]: champ.type === 'number' ? 0 : ''
+    }), {})
   );
 
-  const [customFields, setCustomFields] = useState([]);
-  const [newCustomField, setNewCustomField] = useState({ 
+  const [champsPersonnalises, setChampsPersonnalises] = useState([]);
+  const [nouveauChamp, setNouveauChamp] = useState({ 
     name: '', 
     type: 'text' 
   });
 
-  const handleSubmit = (e) => {
+  const handleSoumettre = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(donneesFormulaire);
+    onClose();
   };
 
-  const addCustomField = () => {
-    if (!newCustomField.name) return;
+  const ajouterChamp = () => {
+    if (!nouveauChamp.name) return;
     
-    setCustomFields([...customFields, newCustomField]);
-    setFormData({
-      ...formData,
-      [newCustomField.name]: newCustomField.type === 'number' ? 0 : ''
+    setChampsPersonnalises([...champsPersonnalises, nouveauChamp]);
+    setDonneesFormulaire({
+      ...donneesFormulaire,
+      [nouveauChamp.name]: nouveauChamp.type === 'number' ? 0 : ''
     });
-    setNewCustomField({ name: '', type: 'text' });
+    setNouveauChamp({ name: '', type: 'text' });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Stack spacing={3}>
-        <Typography variant="h6">Standard Tournament Fields</Typography>
-        
-        {/* Render standard fields */}
-        {STANDARD_FIELDS.map((field) => (
-          field.type === 'select' ? (
-            <TextField
-              key={field.name}
-              select
-              label={field.label}
-              value={formData[field.name] || ''}
-              onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-              required={field.required}
-            >
-              {field.options.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
-          ) : (
-            <TextField
-              key={field.name}
-              label={field.label}
-              type={field.type}
-              InputLabelProps={field.type === 'date' ? { shrink: true } : {}}
-              value={formData[field.name] || ''}
-              onChange={(e) => setFormData({
-                ...formData, 
-                [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value
-              })}
-              required={field.required}
-            />
-          )
-        ))}
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="h6">Custom Fields</Typography>
-        
-        {/* Render custom fields */}
-        {customFields.map((field) => (
-          <TextField
-            key={field.name}
-            label={field.name}
-            type={field.type}
-            value={formData[field.name] || ''}
-            onChange={(e) => setFormData({
-              ...formData, 
-              [field.name]: field.type === 'number' ? Number(e.target.value) : e.target.value
-            })}
-          />
-        ))}
-
-        {/* Add new custom field */}
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            label="Field Name"
-            value={newCustomField.name}
-            onChange={(e) => setNewCustomField({...newCustomField, name: e.target.value})}
-            size="small"
-          />
-          <TextField
-            select
-            label="Type"
-            value={newCustomField.type}
-            onChange={(e) => setNewCustomField({...newCustomField, type: e.target.value})}
-            size="small"
-            sx={{ minWidth: 120 }}
-          >
-            <MenuItem value="text">Text</MenuItem>
-            <MenuItem value="number">Number</MenuItem>
-            <MenuItem value="boolean">Yes/No</MenuItem>
-          </TextField>
-          <Button 
-            onClick={addCustomField} 
-            variant="outlined"
-            disabled={!newCustomField.name}
-          >
-            Add Field
-          </Button>
-        </Stack>
-
-        <Button 
-          type="submit" 
-          variant="contained" 
-          size="large"
-          sx={{ mt: 3 }}
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        Créer un nouveau tournoi
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
         >
-          Create Tournament
+          <Close />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent dividers>
+        <form onSubmit={handleSoumettre}>
+          <Stack spacing={3}>
+            <Typography variant="h6">Champs standards</Typography>
+            
+            {CHAMPS_STANDARDS.map((champ) => (
+              champ.type === 'select' ? (
+                <TextField
+                  key={champ.name}
+                  select
+                  label={champ.label}
+                  value={donneesFormulaire[champ.name] || ''}
+                  onChange={(e) => setDonneesFormulaire({...donneesFormulaire, [champ.name]: e.target.value})}
+                  required={champ.required}
+                  fullWidth
+                  margin="normal"
+                >
+                  {champ.options.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : (
+                <TextField
+                  key={champ.name}
+                  label={champ.label}
+                  type={champ.type}
+                  InputLabelProps={champ.type === 'date' ? { shrink: true } : {}}
+                  value={donneesFormulaire[champ.name] || ''}
+                  onChange={(e) => setDonneesFormulaire({
+                    ...donneesFormulaire, 
+                    [champ.name]: champ.type === 'number' ? Number(e.target.value) : e.target.value
+                  })}
+                  required={champ.required}
+                  fullWidth
+                  margin="normal"
+                />
+              )
+            ))}
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="h6">Champs personnalisés</Typography>
+            
+            {champsPersonnalises.map((champ) => (
+              <TextField
+                key={champ.name}
+                label={champ.name}
+                type={champ.type}
+                value={donneesFormulaire[champ.name] || ''}
+                onChange={(e) => setDonneesFormulaire({
+                  ...donneesFormulaire, 
+                  [champ.name]: champ.type === 'number' ? Number(e.target.value) : e.target.value
+                })}
+                fullWidth
+                margin="normal"
+              />
+            ))}
+
+            <Stack direction="row" spacing={2} alignItems="center">
+              <TextField
+                label="Nom du champ"
+                value={nouveauChamp.name}
+                onChange={(e) => setNouveauChamp({...nouveauChamp, name: e.target.value})}
+                size="small"
+                fullWidth
+              />
+              <TextField
+                select
+                label="Type"
+                value={nouveauChamp.type}
+                onChange={(e) => setNouveauChamp({...nouveauChamp, type: e.target.value})}
+                size="small"
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="text">Texte</MenuItem>
+                <MenuItem value="number">Nombre</MenuItem>
+                <MenuItem value="boolean">Oui/Non</MenuItem>
+              </TextField>
+              <Button 
+                onClick={ajouterChamp} 
+                variant="outlined"
+                disabled={!nouveauChamp.name}
+              >
+                Ajouter
+              </Button>
+            </Stack>
+          </Stack>
+        </form>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={onClose}>Annuler</Button>
+        <Button 
+          onClick={handleSoumettre} 
+          variant="contained"
+          type="submit"
+        >
+          Créer
         </Button>
-      </Stack>
-    </form>
+      </DialogActions>
+    </Dialog>
   );
 }

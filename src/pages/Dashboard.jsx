@@ -12,6 +12,7 @@ import TournamentForm from '../components/TournamentForm';
 import TournamentsTable from '../components/TournamentsTable';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import AppBarWithLogout from '../components/AppBarWithLogout';
 
 export default function TournamentsDashboard() {
   const [tournaments, setTournaments] = useState([]);
@@ -52,17 +53,9 @@ export default function TournamentsDashboard() {
   };
 
   return (
+    <>
+    <AppBarWithLogout />
     <Box sx={{ p: 3 }}>
-      <Button 
-        variant="contained" 
-        onClick={() => {
-          setCurrentTournament(null);
-          setOpenForm(true);
-        }}
-        sx={{ mb: 3 }}
-      >
-        Add New Tournament
-      </Button>
 
       <TournamentsTable
         tournaments={tournaments}
@@ -80,5 +73,6 @@ export default function TournamentsDashboard() {
         initialData={currentTournament}
       />
     </Box>
+    </>
   );
 }
