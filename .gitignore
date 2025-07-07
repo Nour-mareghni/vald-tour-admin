@@ -26,3 +26,6 @@ firebase.json
 *.njsproj
 *.sln
 *.sw?
+.firebase/hosting.ZGlzdA.cache
+.github/workflows/firebase-hosting-pull-request.yml
+.firebase/hosting.ZGlzdA.cache
