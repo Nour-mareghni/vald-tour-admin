@@ -24,7 +24,7 @@ export default function AppBarWithLogout() {
       <Toolbar>
         {/* Titre à gauche avec flex grow pour occuper l'espace disponible */}
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Tour Admin
+          Concert Vald admin
         </Typography>
         {/* Bouton de déconnexion à droite */}
         <Button color="inherit" onClick={handleLogout}>

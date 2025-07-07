@@ -11,61 +11,61 @@ import {
 import { db } from '../firebase'; // Import de la configuration Firebase
 
 // Import des composants personnalisés
-import TournamentForm from '../components/TournamentForm'; // Formulaire de tournoi
-import TournamentsTable from '../components/TournamentsTable'; // Tableau des tournois
+import ConcertForm from '../components/ConcertForm'; // Formulaire de concert
+import ConcertsTable from '../components/ConcertsTable'; // Tableau des concerts
 import Button from '@mui/material/Button'; // Composant bouton Material-UI
 import Box from '@mui/material/Box'; // Composant layout Material-UI
 import AppBarWithLogout from '../components/AppBarWithLogout'; // Barre d'application avec déconnexion
 
-export default function TournamentsDashboard() {
+export default function ConcertsDashboard() {
   // États du composant
-  const [tournaments, setTournaments] = useState([]); // Liste des tournois
+  const [concerts, setConcerts] = useState([]); // Liste des concerts
   const [openForm, setOpenForm] = useState(false); // Contrôle l'ouverture du formulaire
-  const [currentTournament, setCurrentTournament] = useState(null); // Tournoi sélectionné pour édition
+  const [currentConcert, setCurrentConcert] = useState(null); // Concert sélectionné pour édition
 
-  // Effet pour charger les tournois au montage du composant
+  // Effet pour charger les concerts au montage du composant
   useEffect(() => {
-    const fetchTournaments = async () => {
-      // Récupération des documents depuis la collection 'tournaments'
-      const querySnapshot = await getDocs(collection(db, 'tournaments'));
+    const fetchConcerts = async () => {
+      // Récupération des documents depuis la collection 'concerts'
+      const querySnapshot = await getDocs(collection(db, 'concerts'));
       // Transformation des données et mise à jour de l'état
-      setTournaments(querySnapshot.docs.map(doc => ({ 
+      setConcerts(querySnapshot.docs.map(doc => ({ 
         id: doc.id, // Ajout de l'ID du document
         ...doc.data() // Récupération de toutes les données du document
       })));
     };
-    fetchTournaments();
+    fetchConcerts();
   }, []); // Tableau de dépendances vide = exécuté une fois au montage
 
   // Opérations CRUD (Create, Read, Update, Delete)
 
-  // Création d'un nouveau tournoi
+  // Création d'un nouveau concert
   const handleCreate = async (data) => {
-    // Ajout d'un nouveau document dans la collection 'tournaments'
-    await addDoc(collection(db, 'tournaments'), data);
+    // Ajout d'un nouveau document dans la collection 'concerts'
+    await addDoc(collection(db, 'concerts'), data);
     setOpenForm(false); // Fermeture du formulaire
     // Rafraîchissement de la liste
-    const querySnapshot = await getDocs(collection(db, 'tournaments'));
-    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const querySnapshot = await getDocs(collection(db, 'concerts'));
+    setConcerts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  // Mise à jour d'un tournoi existant
+  // Mise à jour d'un concert existant
   const handleUpdate = async (data) => {
-    // Mise à jour du document spécifique avec l'ID du tournoi actuel
-    await updateDoc(doc(db, 'tournaments', currentTournament.id), data);
+    // Mise à jour du document spécifique avec l'ID du concert actuel
+    await updateDoc(doc(db, 'concerts', currentConcert.id), data);
     setOpenForm(false); // Fermeture du formulaire
     // Rafraîchissement de la liste
-    const querySnapshot = await getDocs(collection(db, 'tournaments'));
-    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const querySnapshot = await getDocs(collection(db, 'concerts'));
+    setConcerts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  // Suppression d'un tournoi
+  // Suppression d'un concert
   const handleDelete = async (id) => {
     // Suppression du document avec l'ID spécifié
-    await deleteDoc(doc(db, 'tournaments', id));
+    await deleteDoc(doc(db, 'concerts', id));
     // Rafraîchissement de la liste
-    const querySnapshot = await getDocs(collection(db, 'tournaments'));
-    setTournaments(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const querySnapshot = await getDocs(collection(db, 'concerts'));
+    setConcerts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
   // Rendu du composant
@@ -76,22 +76,25 @@ export default function TournamentsDashboard() {
       
       {/* Contenu principal avec padding */}
       <Box sx={{ p: 3 }}>
-        {/* Tableau des tournois avec gestion des actions */}
-        <TournamentsTable
-          tournaments={tournaments} // Passage de la liste des tournois
-          onEdit={(tournament) => {
-            setCurrentTournament(tournament); // Sélection du tournoi à éditer
+        {/* Bouton pour ajouter un nouveau concert */}
+
+
+        {/* Tableau des concerts avec gestion des actions */}
+        <ConcertsTable
+          concerts={concerts} // Passage de la liste des concerts
+          onEdit={(concert) => {
+            setCurrentConcert(concert); // Sélection du concert à éditer
             setOpenForm(true); // Ouverture du formulaire
           }}
           onDelete={handleDelete} // Passage de la fonction de suppression
         />
 
-        {/* Formulaire de tournoi (création/édition) */}
-        <TournamentForm
+        {/* Formulaire de concert (création/édition) */}
+        <ConcertForm
           open={openForm} // Contrôle l'ouverture/fermeture
           onClose={() => setOpenForm(false)} // Fonction de fermeture
-          onSubmit={currentTournament ? handleUpdate : handleCreate} // Choix de la fonction selon le mode
-          initialData={currentTournament} // Données initiales pour l'édition
+          onSubmit={currentConcert ? handleUpdate : handleCreate} // Choix de la fonction selon le mode
+          initialData={currentConcert} // Données initiales pour l'édition
         />
       </Box>
     </>
