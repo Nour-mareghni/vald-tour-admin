@@ -1,4 +1,3 @@
-// Import des dépendances React et Material-UI
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -9,45 +8,39 @@ import {
   Button,
   MenuItem,
   Stack,
-  Divider,
   Typography,
   IconButton
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 
-// Définition des champs standards du formulaire
+// Updated form fields with only the required ones
 const CHAMPS_STANDARDS = [
-  { name: 'artist', label: 'Artiste/Groupe', type: 'text', required: true },
   { name: 'date', label: 'Date', type: 'date', required: true },
   { name: 'city', label: 'Ville', type: 'text', required: true },
   { name: 'country', label: 'Pays', type: 'text', required: true },
   { name: 'venue', label: 'Lieu', type: 'text', required: true },
-  
   { 
     name: 'status', 
     label: 'Statut', 
     type: 'select',
-    options: ['upcoming', 'ongoing', 'completed'],
+    options: ['disponible', 'sold out'],
     required: true 
   }
 ];
 
-// Composant principal FormulaireConcert
-export default function FormulaireConcert({ open, onClose, onSubmit, initialData }) {
-  // État pour stocker les données du formulaire
-  const [donneesFormulaire, setDonneesFormulaire] = useState(
+export default function ConcertForm({ open, onClose, onSubmit, initialData }) {
+  const [formData, setFormData] = useState(
     CHAMPS_STANDARDS.reduce((acc, champ) => ({
       ...acc,
       [champ.name]: champ.type === 'number' ? 0 : ''
     }), {})
   );
 
-  // Effet pour initialiser ou réinitialiser le formulaire
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
-      setDonneesFormulaire(initialData);
+      setFormData(initialData);
     } else {
-      setDonneesFormulaire(
+      setFormData(
         CHAMPS_STANDARDS.reduce((acc, champ) => ({
           ...acc,
           [champ.name]: champ.type === 'number' ? 0 : ''
@@ -56,15 +49,13 @@ export default function FormulaireConcert({ open, onClose, onSubmit, initialData
     }
   }, [initialData, open]);
 
-  // Gestion de la soumission du formulaire
-  const handleSoumettre = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(donneesFormulaire);
+    onSubmit(formData);
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      {/* En-tête du dialogue avec titre conditionnel et bouton de fermeture */}
       <DialogTitle>
         {initialData?.id ? 'Modifier le concert' : 'Créer un nouveau concert'}
         <IconButton
@@ -80,22 +71,20 @@ export default function FormulaireConcert({ open, onClose, onSubmit, initialData
         </IconButton>
       </DialogTitle>
       
-      {/* Contenu principal du formulaire */}
       <DialogContent dividers>
-        <form onSubmit={handleSoumettre}>
+        <form onSubmit={handleSubmit}>
           <Stack spacing={3}>
             <Typography variant="h6">Informations sur le concert</Typography>
             
-            {/* Boucle sur les champs standards pour générer les inputs */}
             {CHAMPS_STANDARDS.map((champ) => (
               champ.type === 'select' ? (
                 <TextField
                   key={champ.name}
                   select
                   label={champ.label}
-                  value={donneesFormulaire[champ.name] || ''}
-                  onChange={(e) => setDonneesFormulaire({
-                    ...donneesFormulaire, 
+                  value={formData[champ.name] || ''}
+                  onChange={(e) => setFormData({
+                    ...formData, 
                     [champ.name]: e.target.value
                   })}
                   required={champ.required}
@@ -114,11 +103,11 @@ export default function FormulaireConcert({ open, onClose, onSubmit, initialData
                   label={champ.label}
                   type={champ.type}
                   InputLabelProps={champ.type === 'date' ? { shrink: true } : {}}
-                  value={champ.type === 'date' && donneesFormulaire[champ.name] 
-                    ? donneesFormulaire[champ.name].split('T')[0]
-                    : donneesFormulaire[champ.name] || ''}
-                  onChange={(e) => setDonneesFormulaire({
-                    ...donneesFormulaire, 
+                  value={champ.type === 'date' && formData[champ.name] 
+                    ? formData[champ.name].split('T')[0]
+                    : formData[champ.name] || ''}
+                  onChange={(e) => setFormData({
+                    ...formData, 
                     [champ.name]: champ.type === 'number' 
                       ? Number(e.target.value)
                       : e.target.value
@@ -133,11 +122,10 @@ export default function FormulaireConcert({ open, onClose, onSubmit, initialData
         </form>
       </DialogContent>
 
-      {/* Actions en bas du dialogue */}
       <DialogActions>
         <Button onClick={onClose}>Annuler</Button>
         <Button 
-          onClick={handleSoumettre} 
+          onClick={handleSubmit} 
           variant="contained"
           type="submit"
         >

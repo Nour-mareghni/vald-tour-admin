@@ -22,79 +22,65 @@ import ConcertForm from './ConcertForm';
 import { db } from '../firebase';
 import { updateDoc, addDoc, collection, getDocs, doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
+// Updated status colors
 const statusColors = {
-  upcoming: 'primary',
-  ongoing: 'warning',
-  completed: 'success'
+  'disponible': 'success',
+  'sold out': 'error'
 };
 
-export default function TableauConcerts() {
+export default function ConcertTable() {
   const [concerts, setConcerts] = useState([]);
-  const [formOuvert, setFormOuvert] = useState(false);
-  const [concertActuel, setConcertActuel] = useState(null);
-  const [suppressionOuverte, setSuppressionOuverte] = useState(false);
-  const [concertASupprimer, setConcertASupprimer] = useState(null);
-
-  // Charger les concerts depuis Firestore
-  useEffect(() => {
-    const chargerConcerts = async () => {
-      const querySnapshot = await getDocs(collection(db, 'concerts'));
-      const donneesConcerts = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setConcerts(donneesConcerts);
-    };
-
-    chargerConcerts();
-  }, []);
+  const [formOpen, setFormOpen] = useState(false);
+  const [currentConcert, setCurrentConcert] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [concertToDelete, setConcertToDelete] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'concerts'), (snapshot) => {
-      const donneesConcerts = snapshot.docs.map(doc => ({
+      const concertData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setConcerts(donneesConcerts);
+      setConcerts(concertData);
     });
 
-    return () => unsubscribe(); // Nettoyage
+    return () => unsubscribe();
   }, []);
 
-  const confirmerSuppression = (concert) => {
-    setConcertASupprimer(concert);
-    setSuppressionOuverte(true);
+  const confirmDelete = (concert) => {
+    setConcertToDelete(concert);
+    setDeleteOpen(true);
   };
 
-  const handleSupprimer = async () => {
-    if (!concertASupprimer?.id) {
-      console.error("Aucun ID de concert à supprimer");
+  const handleDelete = async () => {
+    if (!concertToDelete?.id) {
+      console.error("No concert ID to delete");
       return;
     }
 
     try {
-      await deleteDoc(doc(db, 'concerts', concertASupprimer.id));
-      setSuppressionOuverte(false);
-      setConcertASupprimer(null);
+      await deleteDoc(doc(db, 'concerts', concertToDelete.id));
+      setDeleteOpen(false);
+      setConcertToDelete(null);
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
+      console.error("Error deleting:", error);
     }
   };
 
-  const handleSoumettre = async (donneesConcert) => {
+  const handleSubmit = async (concertData) => {
     try {
-      if (concertActuel) {
-        await updateDoc(doc(db, 'concerts', concertActuel.id), donneesConcert);
+      if (currentConcert) {
+        await updateDoc(doc(db, 'concerts', currentConcert.id), concertData);
       } else {
         await addDoc(collection(db, 'concerts'), {
-          ...donneesConcert,
-          createdAt: new Date() // Optionnel: ajoute un timestamp
+          ...concertData,
+          createdAt: new Date()
         });
       }
-      setFormOuvert(false);
-      setConcertActuel(null);
+      setFormOpen(false);
+      setCurrentConcert(null);
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement:", error);
+      console.error("Error saving:", error);
     }
   };
 
@@ -103,8 +89,8 @@ export default function TableauConcerts() {
       <Button 
         variant="contained" 
         onClick={() => {
-          setConcertActuel(null);
-          setFormOuvert(true);
+          setCurrentConcert(null);
+          setFormOpen(true);
         }}
         sx={{ mb: 3 }}
       >
@@ -115,11 +101,10 @@ export default function TableauConcerts() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Artiste</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Ville</TableCell>
+              <TableCell>Pays</TableCell>
               <TableCell>Lieu</TableCell>
-              
               <TableCell>Statut</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -127,11 +112,10 @@ export default function TableauConcerts() {
           <TableBody>
             {concerts.map((concert) => (
               <TableRow key={concert.id}>
-                <TableCell>{concert.artist}</TableCell>
                 <TableCell>{new Date(concert.date).toLocaleDateString()}</TableCell>
-                <TableCell>{concert.city}, {concert.country}</TableCell>
+                <TableCell>{concert.city}</TableCell>
+                <TableCell>{concert.country}</TableCell>
                 <TableCell>{concert.venue}</TableCell>
-                
                 <TableCell>
                   <Chip 
                     label={concert.status} 
@@ -140,12 +124,12 @@ export default function TableauConcerts() {
                 </TableCell>
                 <TableCell>
                   <IconButton onClick={() => {
-                    setConcertActuel(concert);
-                    setFormOuvert(true);
+                    setCurrentConcert(concert);
+                    setFormOpen(true);
                   }}>
                     <Edit />
                   </IconButton>
-                  <IconButton onClick={() => confirmerSuppression(concert)}>
+                  <IconButton onClick={() => confirmDelete(concert)}>
                     <Delete />
                   </IconButton>
                 </TableCell>
@@ -155,21 +139,20 @@ export default function TableauConcerts() {
         </Table>
       </TableContainer>
 
-      {/* Dialogue de confirmation de suppression */}
       <Dialog
-        open={suppressionOuverte}
-        onClose={() => setSuppressionOuverte(false)}
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
       >
         <DialogTitle>Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography>
-            Êtes-vous sûr de vouloir supprimer le concert "{concertASupprimer?.artist}" ?
+            Êtes-vous sûr de vouloir supprimer le concert du {concertToDelete && new Date(concertToDelete.date).toLocaleDateString()} ?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSuppressionOuverte(false)}>Annuler</Button>
+          <Button onClick={() => setDeleteOpen(false)}>Annuler</Button>
           <Button 
-            onClick={handleSupprimer} 
+            onClick={handleDelete} 
             color="error"
             variant="contained"
           >
@@ -179,13 +162,13 @@ export default function TableauConcerts() {
       </Dialog>
 
       <ConcertForm 
-        open={formOuvert}
+        open={formOpen}
         onClose={() => {
-          setFormOuvert(false);
-          setConcertActuel(null);
+          setFormOpen(false);
+          setCurrentConcert(null);
         }}
-        onSubmit={handleSoumettre}
-        initialData={concertActuel || {}}
+        onSubmit={handleSubmit}
+        initialData={currentConcert || {}}
       />
     </Box>
   );
